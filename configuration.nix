@@ -7,9 +7,9 @@
   nixpkgs.config.allowUnfree = true;
   nixpkgs.hostPlatform = "aarch64-darwin"; # use x86_64-darwin for Intel CPU
 
-  system.primaryUser = "kunchen";
-  users.users.kunchen = {
-    home = "/Users/kunchen";
+  system.primaryUser = "warp";
+  users.users.warp = {
+    home = "/Users/warp";
   };
   system.stateVersion = 6;
   system.defaults = {
@@ -27,7 +27,8 @@
   };
   nix-homebrew = {
     enable = true;
-    user = "kunchen";
+    user = "warp";
+    autoMigrate = true;
   };
   homebrew = {
     enable = true;
@@ -36,10 +37,14 @@
     onActivation.extraFlags = [ "--force" ];
     brews = [
       "herdr"
+      "bun"
     ];
     casks = [
       "wezterm"
       "claude-code"
+      "antigravity"
+      "antigravity-ide"
+      "docker-desktop"
     ];
   };
 }
