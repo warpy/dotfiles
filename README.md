@@ -8,7 +8,7 @@ From a clean shell:
 
 ```sh
 # Clone repo
-git clone git@github.com:warpy/dotfiles.git ~/.dotfiles
+git clone https://github.com/warpy/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # Bootstrap (Installs Nix, symlinks config, and runs darwin-rebuild)
@@ -24,7 +24,7 @@ From a clean shell:
 curl -L https://nixos.org/nix/install | sh -s -- --daemon
 
 # 2. Clone repo
-git clone git@github.com:warpy/dotfiles.git ~/.dotfiles
+git clone https://github.com/warpy/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # 3. Apply Home-Manager standalone
