@@ -88,6 +88,23 @@ in
     '';
   };
 
+  systemd.user.services.opencode-web = pkgs.lib.mkIf pkgs.stdenv.isLinux {
+    Unit = {
+      Description = "OpenCode Web Server";
+      After = [ "network.target" ];
+    };
+    Service = {
+      Type = "simple";
+      WorkingDirectory = "%h";
+      ExecStart = "${config.home.homeDirectory}/.nix-profile/bin/opencode web --port 4096 --hostname 0.0.0.0";
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
+
   programs.git = {
     enable = true;
     settings.user = {
