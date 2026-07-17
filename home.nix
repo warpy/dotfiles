@@ -79,6 +79,15 @@ in
     };
   };
 
+  programs.bash = {
+    enable = true;
+    initExtra = ''
+      if [ -t 1 ] && [ -x "$(command -v zsh)" ]; then
+        exec zsh
+      fi
+    '';
+  };
+
   programs.git = {
     enable = true;
     settings.user = {
