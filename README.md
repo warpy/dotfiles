@@ -25,17 +25,18 @@ Running the switch builds:
 
 ## Prerequisites
 
-- Apple Silicon Mac, by default.
-- Intel Mac: change one line.
-  In `configuration.nix`, set `nixpkgs.hostPlatform = "x86_64-darwin";` (the comment right there tells you the same thing).
+- **macOS**: Apple Silicon Mac by default (Intel Mac requires setting `nixpkgs.hostPlatform = "x86_64-darwin";` in `configuration.nix`).
+- **Ubuntu Server**: Standard Linux installation.
 
 ## Fresh-machine setup
 
-On a brand new Mac, from a bare clone of this repo:
+### macOS Setup
+
+From a bare clone of this repo:
 
 ```sh
-git clone https://github.com/kunchenguid/dotfiles.git
-cd dotfiles
+git clone git@github.com:warpy/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
 ```
 
 Before you run it: review "Make it yours" below.
@@ -57,9 +58,25 @@ Change the host label or CPU architecture if needed, and read the Homebrew clean
 
 After that, `darwin-rebuild` exists and you're on the normal workflow below.
 
-### Validate without applying
+### Ubuntu Server Setup
 
-Once Nix is installed (`bootstrap.sh` step 1 handles that), you can check that the config builds without touching your system - handy when you have edited something:
+On a brand new Ubuntu Server, perform the following steps to apply the standalone Home-Manager setup:
+
+```sh
+# 1. Install Nix (multi-user daemon recommended)
+curl -L https://nixos.org/nix/install | sh -s -- --daemon
+
+# 2. Clone the dotfiles repository to ~/.dotfiles
+git clone git@github.com:warpy/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+
+# 3. Apply the standalone Home-Manager configuration
+nix run github:nix-community/home-manager/release-26.05 -- switch --flake ~/.dotfiles#ubuntu
+```
+
+### Validate without applying (macOS)
+
+Once Nix is installed (`bootstrap.sh` step 1 handles that), you can check that the config builds without touching your system:
 
 ```sh
 nix flake check --no-build
@@ -81,31 +98,28 @@ No separate build-and-copy step.
 
 ## Make it yours
 
-This repo is mine.
-If you clone it, review these before you run `bootstrap.sh`:
+If you clone this, review these configurations:
 
-- **Username**: run `./bootstrap.sh` (it detects your macOS username and offers to set it) OR change the single `user = "kunchen"` line in `flake.nix`.
+- **Username**: run `./bootstrap.sh` (it detects your macOS username and offers to set it) OR change the single `user` line in `flake.nix`.
   Everything else (`configuration.nix`, `home.nix`, home directory paths) is threaded from that one variable.
 - **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` name), `rebuild.sh:5` (the `#mac` at the end of the flake reference), and `bootstrap.sh`'s first-switch command (also `#mac`).
   All three have to match.
 - **CPU architecture**, `hostPlatform` in `configuration.nix` (see Prerequisites above).
 
-**Git identity:** this config deliberately does not set your git name or email.
-Git will stop your first commit and tell you to set them (`git config --global user.name "Your Name"` and `git config --global user.email you@example.com`).
-If you'd rather manage that declaratively, add this back to `home.nix` with your own identity:
+**Git identity:** this config sets your git name and email declaratively in `home.nix`:
 
 ```nix
 programs.git = {
   enable = true;
   settings.user = {
-    name = "Your Name";
-    email = "you@example.com";
+    name = "Sanket Parab";
+    email = "sanketsp@gmail.com";
   };
 };
 ```
 
 **Homebrew cleanup warning:** `configuration.nix` sets `homebrew.onActivation.cleanup = "zap"`.
-That means every time you switch, Homebrew removes any package or cask on your machine that isn't listed in the `brews` and `casks` arrays in `configuration.nix`.
+That means every time you switch on macOS, Homebrew removes any package or cask on your machine that isn't listed in the `brews` and `casks` arrays in `configuration.nix`.
 If you already have Homebrew stuff installed that isn't in that list, the first switch will uninstall it.
 Read through `brews` and `casks` before you run `bootstrap.sh` or `rebuild.sh` for the first time, and add anything you want to keep.
 
@@ -123,25 +137,22 @@ If you don't use it, just remove it from `brews` in your copy.
 ## Repo tour
 
 - `flake.nix` - the entry point.
-  Wires up nixpkgs, nix-darwin, home-manager, and nix-homebrew, and declares the `mac` machine.
+  Wires up nixpkgs, nix-darwin, home-manager, and nix-homebrew, and declares the `mac` machine and the `ubuntu` server.
 - `configuration.nix` - system-level config: macOS defaults, Homebrew.
 - `home.nix` - user-level config: shell, packages, prompt, and the symlinks described below.
 - `rebuild.sh` - re-applies the config after the first switch.
   Run this every time you make a change.
-- `home/` - the actual config files that get symlinked into place (Neovim, WezTerm, herdr, Claude settings, the shared `AGENTS.md`).
+- `home/` - the actual config files that get symlinked into place (WezTerm, herdr, Claude settings, the shared `AGENTS.md`).
 
 ## How the symlinks work
 
 The files under `home/` are the real files - editing them here is editing your live config, no rebuild needed to see the change in your editor.
-`home.nix` uses `mkOutOfStoreSymlink` to point paths like `~/.config/nvim` straight at `home/.config/nvim` in this repo, so the two never drift out of sync.
+`home.nix` uses `mkOutOfStoreSymlink` to point paths like `~/.config/wezterm` straight at `home/.config/wezterm` in this repo, so the two never drift out of sync.
 You only run `./rebuild.sh` when you change something that isn't just a symlinked file, like a package list or a system default.
 
 ## Notes
 
-The first time you launch `nvim`, it bootstraps [lazy.nvim](https://github.com/folke/lazy.nvim) by cloning plugins from GitHub.
-That needs network access once; after that it's offline.
-Neovim and WezTerm both use the rose-pine moon theme.
-Neovim keeps italics off and uses a transparent background on macOS, Windows, and WSL so it matches the terminal setup.
+WezTerm uses the rose-pine moon theme.
 
 ## License
 
