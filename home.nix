@@ -30,6 +30,12 @@ in
     (writeShellScriptBin "opencode" ''
       exec ${nodejs}/bin/npx -y opencode-ai "$@"
     '')
+    (writeShellScriptBin "tailscale-setup" ''
+      echo "Installing Tailscale..."
+      curl -fsSL https://tailscale.com/install.sh | sh
+      echo "Starting Tailscale..."
+      sudo tailscale up
+    '')
     (stdenv.mkDerivation {
       pname = "antigravity";
       version = "1.0.0";
