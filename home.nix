@@ -27,20 +27,9 @@ in
     proto
   ] ++ (lib.optionals stdenv.isLinux [
     # custom Linux packages
-    (stdenv.mkDerivation {
-      pname = "opencode";
-      version = "1.0.0";
-      src = fetchurl {
-        url = "https://github.com/opencode-ai/opencode/releases/download/v1.0.0/opencode-linux-x64";
-        sha256 = "0000000000000000000000000000000000000000000000000000";
-      };
-      phases = [ "installPhase" ];
-      installPhase = ''
-        mkdir -p $out/bin
-        cp $src $out/bin/opencode
-        chmod +x $out/bin/opencode
-      '';
-    })
+    (writeShellScriptBin "opencode" ''
+      exec ${nodejs}/bin/npx -y opencode-ai "$@"
+    '')
     (stdenv.mkDerivation {
       pname = "antigravity";
       version = "1.0.0";
