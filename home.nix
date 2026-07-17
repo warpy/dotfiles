@@ -51,7 +51,8 @@ in
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
       if ! command -v tailscale &>/dev/null; then
         echo "Tailscale not found. Installing system-level Tailscale..."
-        ${pkgs.curl}/bin/curl -fsSL https://tailscale.com/install.sh | sh
+        export PATH="${pkgs.curl}/bin:$PATH"
+        curl -fsSL https://tailscale.com/install.sh | sh
         sudo tailscale up
       else
         echo "Tailscale is already installed."
