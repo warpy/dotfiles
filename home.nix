@@ -1,10 +1,12 @@
-{ config, pkgs, ... }:
+{ config, pkgs, user ? "warp", ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
 in
 
 {
+  home.username = pkgs.lib.mkDefault user;
+  home.homeDirectory = pkgs.lib.mkDefault "/Users/${user}";
   home.stateVersion = "24.11";
 
   home.packages = with pkgs; [

@@ -14,34 +14,40 @@
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs }: {
-    darwinConfigurations."mac" = nix-darwin.lib.darwinSystem {
-      modules = [
-        ./configuration.nix
-        nix-homebrew.darwinModules.nix-homebrew
-        home-manager.darwinModules.home-manager
-        {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.users.warp = {
-            imports = [ ./home.nix ];
-            home.username = "warp";
-            home.homeDirectory = "/Users/warp";
-          };
-          home-manager.backupFileExtension = "backup";
-        }
-      ];
-    };
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs }:
+    let
+      # The one username line to change if this isn't your machine.
+      # bootstrap.sh offers to rewrite this for you if your macOS username differs.
+      user = "warp";
+    in
+    {
+      darwinConfigurations."mac" = nix-darwin.lib.darwinSystem {
+        specialArgs = { inherit user; };
+        modules = [
+          ./configuration.nix
+          nix-homebrew.darwinModules.nix-homebrew
+          home-manager.darwinModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.extraSpecialArgs = { inherit user; };
+            home-manager.users.${user} = {
+              imports = [ ./home.nix ];
+            };
+            home-manager.backupFileExtension = "backup";
+          }
+        ];
+      };
 
-    homeConfigurations."ubuntu" = home-manager.lib.homeManagerConfiguration {
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
-      modules = [
-        ./home.nix
-        {
-          home.username = "warp";
-          home.homeDirectory = "/home/warp";
-        }
-      ];
+      homeConfigurations."ubuntu" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux;
+        modules = [
+          ./home.nix
+          {
+            home.username = "warp";
+            home.homeDirectory = "/home/warp";
+          }
+        ];
+      };
     };
-  };
 }
