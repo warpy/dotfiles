@@ -28,6 +28,7 @@ in
   ] ++ (lib.optionals stdenv.isLinux [
     # custom Linux packages
     (writeShellScriptBin "opencode" ''
+      export PATH="${nodejs}/bin:$PATH"
       exec ${nodejs}/bin/npx -y opencode-ai "$@"
     '')
     (stdenv.mkDerivation {
