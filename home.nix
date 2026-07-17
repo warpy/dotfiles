@@ -30,12 +30,6 @@ in
     (writeShellScriptBin "opencode" ''
       exec ${nodejs}/bin/npx -y opencode-ai "$@"
     '')
-    (writeShellScriptBin "tailscale-setup" ''
-      echo "Installing Tailscale..."
-      curl -fsSL https://tailscale.com/install.sh | sh
-      echo "Starting Tailscale..."
-      sudo tailscale up
-    '')
     (stdenv.mkDerivation {
       pname = "antigravity";
       version = "1.0.0";
@@ -51,6 +45,19 @@ in
       '';
     })
   ]);
+
+  # Automatically install and run Tailscale on Linux if not present
+  home.activation.installTailscale = pkgs.lib.mkIf pkgs.stdenv.isLinux (
+    config.lib.dag.entryAfter [ "writeBoundary" ] ''
+      if ! command -v tailscale &>/dev/null; then
+        echo "Tailscale not found. Installing system-level Tailscale..."
+        curl -fsSL https://tailscale.com/install.sh | sh
+        sudo tailscale up
+      else
+        echo "Tailscale is already installed."
+      fi
+    ''
+  );
 
   fonts.fontconfig.enable = true;
   home.sessionVariables.EDITOR = "vim";
