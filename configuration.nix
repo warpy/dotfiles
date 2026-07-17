@@ -46,6 +46,7 @@
       "antigravity-ide"
       "docker-desktop"
       "bruno"
+      "tailscale"
     ];
   };
 }
