@@ -5,9 +5,8 @@ let
 in
 
 {
-  home.username = "warp";
-  home.homeDirectory = "/Users/warp";
   home.stateVersion = "24.11";
+
   home.packages = with pkgs; [
     # cli i use constantly
     ripgrep   # fast search
@@ -15,19 +14,67 @@ in
     fzf       # fuzzy finder
     jq        # json on the command line
     lazygit
-    neovim
     # the font everything renders in
     nerd-fonts.hack
-  ];
+
+    # shared CLI packages
+    bun
+    ollama
+    sqlite
+    gh
+    proto
+  ] ++ (lib.optionals stdenv.isLinux [
+    # custom Linux packages
+    (stdenv.mkDerivation {
+      pname = "opencode";
+      version = "1.0.0";
+      src = fetchurl {
+        url = "https://github.com/opencode-ai/opencode/releases/download/v1.0.0/opencode-linux-x64";
+        sha256 = "0000000000000000000000000000000000000000000000000000";
+      };
+      phases = [ "installPhase" ];
+      installPhase = ''
+        mkdir -p $out/bin
+        cp $src $out/bin/opencode
+        chmod +x $out/bin/opencode
+      '';
+    })
+    (stdenv.mkDerivation {
+      pname = "antigravity";
+      version = "1.0.0";
+      src = fetchurl {
+        url = "https://antigravity.google/cli/downloads/antigravity-linux-x64";
+        sha256 = "0000000000000000000000000000000000000000000000000000";
+      };
+      phases = [ "installPhase" ];
+      installPhase = ''
+        mkdir -p $out/bin
+        cp $src $out/bin/antigravity
+        chmod +x $out/bin/antigravity
+      '';
+    })
+  ]);
+
   fonts.fontconfig.enable = true;
-  home.sessionVariables.EDITOR = "nvim";
+  home.sessionVariables.EDITOR = "vim";
 
   programs.zsh = {
     enable = true;
+    enableCompletion = true;
     autosuggestion.enable = true;      # ghost text from history
     syntaxHighlighting.enable = true;  # commands turn green when valid
+    history = {
+      size = 10000;
+      save = 10000;
+      path = "${config.home.homeDirectory}/.zsh_history";
+      ignoreDups = true;
+      ignoreSpace = true;
+      share = true;
+    };
     initContent = ''
       bindkey '^f' autosuggest-accept
+      export PROTO_HOME="$HOME/.proto"
+      export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
     '';
     shellAliases = {
       ".." = "cd ..";
@@ -37,12 +84,16 @@ in
       m = "git switch main";
       cc = "claude --dangerously-skip-permissions";
       co = "codex --full-auto";
+      gs = "git branch && git status -s";
     };
   };
 
-  programs.git.settings.user = {
-    name = "Sanket Parab";
-    email = "sanketsp@gmail.com";
+  programs.git = {
+    enable = true;
+    settings.user = {
+      name = "Sanket Parab";
+      email = "sanketsp@gmail.com";
+    };
   };
 
   programs.starship = {
@@ -61,8 +112,6 @@ in
   # Edit-in-place: the real file stays in my repo, ~/.config just points at it.
   home.file.".config/wezterm".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
-  home.file.".config/nvim".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
   home.file.".config/herdr".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
   home.file.".claude/settings.json".source =

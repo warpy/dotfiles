@@ -23,7 +23,23 @@
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
-          home-manager.users.warp = import ./home.nix;
+          home-manager.users.warp = {
+            imports = [ ./home.nix ];
+            home.username = "warp";
+            home.homeDirectory = "/Users/warp";
+          };
+          home-manager.backupFileExtension = "backup";
+        }
+      ];
+    };
+
+    homeConfigurations."ubuntu" = home-manager.lib.homeManagerConfiguration {
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      modules = [
+        ./home.nix
+        {
+          home.username = "warp";
+          home.homeDirectory = "/home/warp";
         }
       ];
     };

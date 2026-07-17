@@ -25,6 +25,7 @@
     finder.CreateDesktop = false;          # clean desktop
     trackpad.Clicking = true;              # tap to click
   };
+
   nix-homebrew = {
     enable = true;
     user = "warp";
@@ -36,8 +37,7 @@
     onActivation.autoUpdate = true;
     onActivation.extraFlags = [ "--force" ];
     brews = [
-      "herdr"
-      "bun"
+      "opencode"
     ];
     casks = [
       "wezterm"
@@ -45,6 +45,7 @@
       "antigravity"
       "antigravity-ide"
       "docker-desktop"
+      "bruno"
     ];
   };
 }
