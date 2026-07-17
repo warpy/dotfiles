@@ -46,7 +46,7 @@ in
       version = "1.0.0";
       src = fetchurl {
         url = "https://antigravity.google/cli/downloads/antigravity-linux-x64";
-        sha256 = "0000000000000000000000000000000000000000000000000000";
+        sha256 = "sha256-S8nNdNjyOLvF5TPVTPUdrQSXFjBZ1FGEppaYadn44N8=";
       };
       phases = [ "installPhase" ];
       installPhase = ''
