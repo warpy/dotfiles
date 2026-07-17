@@ -28,7 +28,7 @@ git clone https://github.com/warpy/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # 3. Apply Home-Manager standalone
-nix run github:nix-community/home-manager/release-26.05 -- switch --flake ~/.dotfiles#ubuntu
+nix run --extra-experimental-features "nix-command flakes" github:nix-community/home-manager/release-26.05 -- switch --flake ~/.dotfiles#ubuntu
 ```
 
 ## Daily Use
