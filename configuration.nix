@@ -26,6 +26,14 @@
     trackpad.Clicking = true;              # tap to click
   };
 
+  # macOS path_helper picks up /etc/paths and /etc/paths.d/* for ALL shells,
+  # including non-interactive ones. This ensures Nix-installed binaries are
+  # on PATH regardless of how a shell is invoked (login, interactive, or
+  # non-interactive subprocess from tools like opencode agents).
+  environment.etc."paths.d/nix".text = ''
+    /nix/var/nix/profiles/default/bin
+  '';
+
   nix-homebrew = {
     enable = true;
     inherit user;

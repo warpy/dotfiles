@@ -65,7 +65,10 @@ in
         sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
         sudo systemctl enable --now docker
         sudo usermod -aG docker $USER
-        echo "Docker Engine installed. Reboot or re-login for group permissions to take effect."
+        echo ""
+        echo ">>> Docker Engine installed. Run this to activate group membership in current shell:"
+        echo "    newgrp docker"
+        echo "    (or reboot / re-login for a permanent fix)"
       else
         echo "Docker Engine is already installed."
       fi
@@ -118,10 +121,22 @@ in
       ignoreSpace = true;
       share = true;
     };
-    initContent = ''
-      bindkey '^f' autosuggest-accept
+    envExtra = ''
+      # PATH setup for *all* zsh invocations, including non-interactive ones.
+      # ~/.zshenv is sourced by zsh unconditionally, unlike ~/.zshrc which is
+      # interactive-only. This ensures opencode agents and other tools that
+      # spawn non-interactive shells can find Nix-installed binaries.
+      # Order: system Nix daemon (lowest) < user Nix profile < proto (highest).
+      . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null
+      export PATH="$HOME/.nix-profile/bin:$PATH"
       export PROTO_HOME="$HOME/.proto"
       export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
+      # Non-interactive bash (e.g. bash -c "...") sources $BASH_ENV for PATH.
+      # Set it here in .zshenv so it's inherited by bash subprocesses from zsh.
+      export BASH_ENV="$HOME/.bashrc"
+    '';
+    initContent = ''
+      bindkey '^f' autosuggest-accept
     '';
     shellAliases = {
       ".." = "cd ..";
