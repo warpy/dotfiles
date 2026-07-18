@@ -66,7 +66,7 @@ in
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -d "/home/warp/monorepo" ]; then
         echo "Cloning monorepo workspace..."
-        export PATH="${pkgs.git}/bin:$PATH"
+        export PATH="${pkgs.git}/bin:/usr/bin:/bin:$PATH"
         git clone git@github.com:warpy/monorepo.git /home/warp/monorepo
       else
         echo "monorepo workspace is already cloned."
