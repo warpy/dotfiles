@@ -61,6 +61,19 @@ in
     ''
   );
 
+  # Automatically clone the monorepo workspace if not present
+  home.activation.cloneMonorepo = pkgs.lib.mkIf pkgs.stdenv.isLinux (
+    config.lib.dag.entryAfter [ "writeBoundary" ] ''
+      if [ ! -d "/home/warp/monorepo" ]; then
+        echo "Cloning monorepo workspace..."
+        export PATH="${pkgs.git}/bin:$PATH"
+        git clone git@github.com:warpy/monorepo.git /home/warp/monorepo
+      else
+        echo "monorepo workspace is already cloned."
+      fi
+    ''
+  );
+
   fonts.fontconfig.enable = true;
   home.sessionVariables.EDITOR = "vim";
 
@@ -103,15 +116,15 @@ in
     '';
   };
 
-  systemd.user.services.opencode-web = pkgs.lib.mkIf pkgs.stdenv.isLinux {
+  systemd.user.services.opencode-serve = pkgs.lib.mkIf pkgs.stdenv.isLinux {
     Unit = {
-      Description = "OpenCode Web Server";
+      Description = "OpenCode Serve Daemon";
       After = [ "network.target" ];
     };
     Service = {
       Type = "simple";
-      WorkingDirectory = "%h";
-      ExecStart = "${config.home.homeDirectory}/.nix-profile/bin/opencode web --port 4096 --hostname 0.0.0.0";
+      WorkingDirectory = "/home/warp/monorepo";
+      ExecStart = "${config.home.homeDirectory}/.nix-profile/bin/opencode serve --port 4096 --hostname 0.0.0.0";
       Restart = "on-failure";
       RestartSec = 5;
     };
