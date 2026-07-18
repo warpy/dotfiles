@@ -167,6 +167,7 @@ in
     };
     Service = {
       Type = "simple";
+      SupplementaryGroups = [ "docker" ];
       WorkingDirectory = "/home/warp/monorepo";
       ExecStart = "${config.home.homeDirectory}/.nix-profile/bin/opencode serve --port 4096 --hostname 0.0.0.0";
       Restart = "on-failure";
