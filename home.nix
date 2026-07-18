@@ -27,6 +27,8 @@ in
     proto
   ] ++ (lib.optionals stdenv.isLinux [
     # custom Linux packages
+    docker
+    docker-compose
     (writeShellScriptBin "opencode" ''
       export PATH="${nodejs}/bin:$PATH"
       exec ${nodejs}/bin/npx -y opencode-ai "$@"
@@ -46,6 +48,29 @@ in
       '';
     })
   ]);
+
+  # Automatically install Docker Engine on Linux if not present
+  home.activation.installDocker = pkgs.lib.mkIf pkgs.stdenv.isLinux (
+    config.lib.dag.entryAfter [ "writeBoundary" ] ''
+      if ! command -v dockerd &>/dev/null; then
+        echo "Docker Engine not found. Installing..."
+        export PATH="${pkgs.curl}/bin:${pkgs.gnupg}/bin:/usr/bin:/bin:$PATH"
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq ca-certificates curl
+        sudo install -m 0755 -d /etc/apt/keyrings
+        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
+        sudo systemctl enable --now docker
+        sudo usermod -aG docker $USER
+        echo "Docker Engine installed. Reboot or re-login for group permissions to take effect."
+      else
+        echo "Docker Engine is already installed."
+      fi
+    ''
+  );
 
   # Automatically install and run Tailscale on Linux if not present
   home.activation.installTailscale = pkgs.lib.mkIf pkgs.stdenv.isLinux (
@@ -75,7 +100,10 @@ in
   );
 
   fonts.fontconfig.enable = true;
-  home.sessionVariables.EDITOR = "vim";
+  home.sessionVariables = {
+    EDITOR = "vim";
+    BASH_ENV = "${config.home.homeDirectory}/.bashrc";
+  };
 
   programs.zsh = {
     enable = true;
@@ -110,6 +138,7 @@ in
   programs.bash = {
     enable = true;
     initExtra = ''
+      export PATH="$HOME/.nix-profile/bin:$PATH"
       if [ -t 1 ] && [ -x "$(command -v zsh)" ]; then
         exec zsh
       fi
