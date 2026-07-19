@@ -94,8 +94,9 @@ in
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
       if ! command -v chrome-headless-shell &>/dev/null; then
         echo "chrome-headless-shell not found. Installing..."
-        export PATH="${pkgs.curl}/bin:${pkgs.unzip}/bin:/usr/bin:/bin:$PATH"
+        export PATH="${pkgs.curl}/bin:/usr/bin:/bin:$PATH"
         sudo apt-get update -qq
+        sudo apt-get install -y -qq unzip
         sudo apt-get install -y -qq libasound2t64 2>/dev/null \
           || sudo apt-get install -y -qq libasound2 2>/dev/null \
           || true
