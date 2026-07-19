@@ -52,25 +52,33 @@ in
   # Automatically install Docker Engine on Linux if not present
   home.activation.installDocker = pkgs.lib.mkIf pkgs.stdenv.isLinux (
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
-      if ! command -v dockerd &>/dev/null; then
+      if [ -x /usr/bin/dockerd ]; then
+        echo "Docker Engine is already installed."
+      else
         echo "Docker Engine not found. Installing..."
         export PATH="${pkgs.curl}/bin:${pkgs.gnupg}/bin:/usr/bin:/bin:$PATH"
-        sudo apt-get update -qq
-        sudo apt-get install -y -qq ca-certificates curl
-        sudo install -m 0755 -d /etc/apt/keyrings
-        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-        sudo chmod a+r /etc/apt/keyrings/docker.asc
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        sudo apt-get update -qq
-        sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+        if ! dpkg -s docker-ce &>/dev/null; then
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ca-certificates curl
+          sudo install -m 0755 -d /etc/apt/keyrings
+          if [ ! -f /etc/apt/keyrings/docker.asc ]; then
+            sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+            sudo chmod a+r /etc/apt/keyrings/docker.asc
+          fi
+          if [ ! -f /etc/apt/sources.list.d/docker.list ]; then
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          fi
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
+        fi
+
         sudo systemctl enable --now docker
         sudo usermod -aG docker $USER
         echo ""
         echo ">>> Docker Engine installed. Run this to activate group membership in current shell:"
         echo "    newgrp docker"
         echo "    (or reboot / re-login for a permanent fix)"
-      else
-        echo "Docker Engine is already installed."
       fi
     ''
   );
@@ -78,13 +86,13 @@ in
   # Automatically install and run Tailscale on Linux if not present
   home.activation.installTailscale = pkgs.lib.mkIf pkgs.stdenv.isLinux (
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
-      if ! command -v tailscale &>/dev/null; then
+      if [ -x /usr/bin/tailscale ]; then
+        echo "Tailscale is already installed."
+      else
         echo "Tailscale not found. Installing system-level Tailscale..."
         export PATH="${pkgs.curl}/bin:/usr/bin:/bin:$PATH"
         curl -fsSL https://tailscale.com/install.sh | sh
         sudo tailscale up
-      else
-        echo "Tailscale is already installed."
       fi
     ''
   );
@@ -92,27 +100,50 @@ in
   # Automatically install chrome-headless-shell on Linux if not present
   home.activation.installChromeHeadlessShell = pkgs.lib.mkIf pkgs.stdenv.isLinux (
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
-      if ! command -v chrome-headless-shell &>/dev/null; then
+      CHS_BIN="/usr/local/lib/chrome-headless-shell-linux64/chrome-headless-shell"
+      CHS_LINK="/usr/local/bin/chrome-headless-shell"
+
+      if [ -x "$CHS_BIN" ]; then
+        if [ ! -L "$CHS_LINK" ] || [ "$(readlink "$CHS_LINK")" != "$CHS_BIN" ]; then
+          sudo ln -sf "$CHS_BIN" "$CHS_LINK"
+          echo "chrome-headless-shell symlink fixed."
+        else
+          echo "chrome-headless-shell is already installed."
+        fi
+      else
         echo "chrome-headless-shell not found. Installing..."
         export PATH="${pkgs.curl}/bin:/usr/bin:/bin:$PATH"
-        sudo apt-get update -qq
-        sudo apt-get install -y -qq unzip
-        sudo apt-get install -y -qq libasound2t64 2>/dev/null \
-          || sudo apt-get install -y -qq libasound2 2>/dev/null \
-          || true
-        sudo apt-get install -y -qq \
-          libatk-bridge2.0-0 libatspi2.0-0 libcups2 \
-          libdrm2 libgbm1 libnspr4 libnss3 libpango-1.0-0 \
-          libxcomposite1 libxdamage1 libxfixes3 libxkbcommon0 libxrandr2
+
+        DEPS="unzip libatk-bridge2.0-0 libatspi2.0-0 libcups2 libdrm2 libgbm1 libnspr4 libnss3 libpango-1.0-0 libxcomposite1 libxdamage1 libxfixes3 libxkbcommon0 libxrandr2"
+        if dpkg -s libasound2t64 &>/dev/null; then
+          DEPS="$DEPS libasound2t64"
+        elif dpkg -s libasound2 &>/dev/null; then
+          DEPS="$DEPS libasound2"
+        elif sudo apt-cache show libasound2t64 &>/dev/null; then
+          DEPS="$DEPS libasound2t64"
+        else
+          DEPS="$DEPS libasound2"
+        fi
+
+        ALL_INSTALLED=true
+        for pkg in $DEPS; do
+          if ! dpkg -s "$pkg" &>/dev/null; then
+            ALL_INSTALLED=false
+            break
+          fi
+        done
+
+        if ! $ALL_INSTALLED; then
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq $DEPS
+        fi
+
         curl -fsSL https://storage.googleapis.com/chrome-for-testing-public/151.0.7922.34/linux64/chrome-headless-shell-linux64.zip \
           -o /tmp/chrome-headless-shell.zip
         sudo unzip -o /tmp/chrome-headless-shell.zip -d /usr/local/lib/
-        sudo ln -sf /usr/local/lib/chrome-headless-shell-linux64/chrome-headless-shell \
-          /usr/local/bin/chrome-headless-shell
+        sudo ln -sf "$CHS_BIN" "$CHS_LINK"
         rm -f /tmp/chrome-headless-shell.zip
         echo "chrome-headless-shell installed."
-      else
-        echo "chrome-headless-shell is already installed."
       fi
     ''
   );
