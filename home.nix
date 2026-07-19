@@ -130,7 +130,7 @@ in
   home.sessionVariables = {
     EDITOR = "vim";
     BASH_ENV = "${config.home.homeDirectory}/.bashrc";
-  } // lib.optionalAttrs stdenv.isLinux {
+  } // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
     PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "/usr/local/bin/chrome-headless-shell";
     PUPPETEER_EXECUTABLE_PATH = "/usr/local/bin/chrome-headless-shell";
   };
