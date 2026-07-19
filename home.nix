@@ -34,7 +34,6 @@ in
       exec ${nodejs}/bin/npx -y opencode-ai "$@"
     '')
     nodejs
-    nodePackages."playwright-core"
     (stdenv.mkDerivation {
       pname = "antigravity";
       version = "1.1.4";
@@ -150,6 +149,22 @@ in
     ''
   );
 
+  # Automatically install playwright-core for agent-friendly content extraction
+  home.activation.installPlaywrightCore = pkgs.lib.mkIf pkgs.stdenv.isLinux (
+    config.lib.dag.entryAfter [ "installChromeHeadlessShell" ] ''
+      export PATH="${nodejs}/bin:/usr/bin:/bin:$PATH"
+      NPM_DIR="$HOME/.local/lib/node_modules"
+      if [ -d "$NPM_DIR/playwright-core" ]; then
+        echo "playwright-core is already installed."
+      else
+        echo "Installing playwright-core..."
+        mkdir -p "$NPM_DIR"
+        npm install --prefix "$HOME/.local" playwright-core
+        echo "playwright-core installed."
+      fi
+    ''
+  );
+
   # Automatically install glue (IDL toolchain) on Linux if not present
   home.activation.installGlue = pkgs.lib.mkIf pkgs.stdenv.isLinux (
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
@@ -185,7 +200,7 @@ in
   } // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
     PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "/usr/local/bin/chrome-headless-shell";
     PUPPETEER_EXECUTABLE_PATH = "/usr/local/bin/chrome-headless-shell";
-    NODE_PATH = "${config.home.profileDirectory}/lib/node_modules";
+    NODE_PATH = "${config.home.homeDirectory}/.local/lib/node_modules";
   };
 
   programs.zsh = {
