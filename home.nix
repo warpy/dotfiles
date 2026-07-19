@@ -33,6 +33,8 @@ in
       export PATH="${nodejs}/bin:$PATH"
       exec ${nodejs}/bin/npx -y opencode-ai "$@"
     '')
+    nodejs
+    nodePackages."playwright-core"
     (stdenv.mkDerivation {
       pname = "antigravity";
       version = "1.1.4";
@@ -183,6 +185,7 @@ in
   } // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
     PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "/usr/local/bin/chrome-headless-shell";
     PUPPETEER_EXECUTABLE_PATH = "/usr/local/bin/chrome-headless-shell";
+    NODE_PATH = "${config.home.profileDirectory}/lib/node_modules";
   };
 
   programs.zsh = {
@@ -292,4 +295,6 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".config/opencode/skills/browser/SKILL.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/browser/SKILL.md";
+  home.file.".config/opencode/skills/browser/browser-helpers.mjs".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/browser/browser-helpers.mjs";
 }
