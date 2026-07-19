@@ -165,13 +165,14 @@ in
       Description = "OpenCode Serve Daemon";
       After = [ "network.target" ];
     };
-    Service = {
+    serviceConfig = {
       Type = "simple";
       SupplementaryGroups = [ "docker" ];
       WorkingDirectory = "/home/warp/monorepo";
       ExecStart = "${config.home.homeDirectory}/.nix-profile/bin/opencode serve --port 4096 --hostname 0.0.0.0";
       Restart = "on-failure";
       RestartSec = 5;
+      Group = "";
     };
     Install = {
       WantedBy = [ "default.target" ];
