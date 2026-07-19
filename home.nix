@@ -89,6 +89,30 @@ in
     ''
   );
 
+  # Automatically install chrome-headless-shell on Linux if not present
+  home.activation.installChromeHeadlessShell = pkgs.lib.mkIf pkgs.stdenv.isLinux (
+    config.lib.dag.entryAfter [ "writeBoundary" ] ''
+      if ! command -v chrome-headless-shell &>/dev/null; then
+        echo "chrome-headless-shell not found. Installing..."
+        export PATH="${pkgs.curl}/bin:${pkgs.unzip}/bin:/usr/bin:/bin:$PATH"
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq \
+          libasound2 libatk-bridge2.0-0 libatspi2.0-0 libcups2 \
+          libdrm2 libgbm1 libnspr4 libnss3 libpango-1.0-0 \
+          libxcomposite1 libxdamage1 libxfixes3 libxkbcommon0 libxrandr2
+        curl -fsSL https://storage.googleapis.com/chrome-for-testing-public/151.0.7922.34/linux64/chrome-headless-shell-linux64.zip \
+          -o /tmp/chrome-headless-shell.zip
+        sudo unzip -o /tmp/chrome-headless-shell.zip -d /usr/local/lib/
+        sudo ln -sf /usr/local/lib/chrome-headless-shell-linux64/chrome-headless-shell \
+          /usr/local/bin/chrome-headless-shell
+        rm -f /tmp/chrome-headless-shell.zip
+        echo "chrome-headless-shell installed."
+      else
+        echo "chrome-headless-shell is already installed."
+      fi
+    ''
+  );
+
   # Automatically clone the monorepo workspace if not present
   home.activation.cloneMonorepo = pkgs.lib.mkIf pkgs.stdenv.isLinux (
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
@@ -106,6 +130,9 @@ in
   home.sessionVariables = {
     EDITOR = "vim";
     BASH_ENV = "${config.home.homeDirectory}/.bashrc";
+  } // lib.optionalAttrs stdenv.isLinux {
+    PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "/usr/local/bin/chrome-headless-shell";
+    PUPPETEER_EXECUTABLE_PATH = "/usr/local/bin/chrome-headless-shell";
   };
 
   programs.zsh = {
@@ -212,4 +239,6 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".config/opencode/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+  home.file.".config/opencode/skills/browser/SKILL.md".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/browser/SKILL.md";
 }
