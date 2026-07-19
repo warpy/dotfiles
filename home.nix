@@ -96,8 +96,11 @@ in
         echo "chrome-headless-shell not found. Installing..."
         export PATH="${pkgs.curl}/bin:${pkgs.unzip}/bin:/usr/bin:/bin:$PATH"
         sudo apt-get update -qq
+        sudo apt-get install -y -qq libasound2t64 2>/dev/null \
+          || sudo apt-get install -y -qq libasound2 2>/dev/null \
+          || true
         sudo apt-get install -y -qq \
-          libasound2 libatk-bridge2.0-0 libatspi2.0-0 libcups2 \
+          libatk-bridge2.0-0 libatspi2.0-0 libcups2 \
           libdrm2 libgbm1 libnspr4 libnss3 libpango-1.0-0 \
           libxcomposite1 libxdamage1 libxfixes3 libxkbcommon0 libxrandr2
         curl -fsSL https://storage.googleapis.com/chrome-for-testing-public/151.0.7922.34/linux64/chrome-headless-shell-linux64.zip \
