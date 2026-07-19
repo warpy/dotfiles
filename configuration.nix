@@ -46,6 +46,7 @@
     onActivation.extraFlags = [ "--force" ];
     brews = [
       "opencode"
+      "guywaldman/tap/glue"
     ];
     casks = [
       "wezterm"

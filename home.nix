@@ -148,6 +148,21 @@ in
     ''
   );
 
+  # Automatically install glue (IDL toolchain) on Linux if not present
+  home.activation.installGlue = pkgs.lib.mkIf pkgs.stdenv.isLinux (
+    config.lib.dag.entryAfter [ "writeBoundary" ] ''
+      GLUE_VERSION="1.12.1"
+      if [ -x "$HOME/.local/bin/glue" ] && [ "$("$HOME/.local/bin/glue" --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' || true)" = "$GLUE_VERSION" ]; then
+        echo "glue $GLUE_VERSION is already installed."
+      else
+        echo "Installing glue $GLUE_VERSION..."
+        export PATH="${pkgs.curl}/bin:/usr/bin:/bin:$PATH"
+        export VERSION="v$GLUE_VERSION"
+        curl -fsSL https://github.com/guywaldman/glue/releases/download/v$GLUE_VERSION/install.sh | bash
+      fi
+    ''
+  );
+
   # Automatically clone the monorepo workspace if not present
   home.activation.cloneMonorepo = pkgs.lib.mkIf pkgs.stdenv.isLinux (
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
@@ -191,6 +206,7 @@ in
       # Order: system Nix daemon (lowest) < user Nix profile < proto (highest).
       . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null
       export PATH="$HOME/.nix-profile/bin:$PATH"
+      export PATH="$HOME/.local/bin:$PATH"
       export PROTO_HOME="$HOME/.proto"
       export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
       # Non-interactive bash (e.g. bash -c "...") sources $BASH_ENV for PATH.
