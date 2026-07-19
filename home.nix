@@ -152,7 +152,7 @@ in
   # Automatically install playwright-core for agent-friendly content extraction
   home.activation.installPlaywrightCore = pkgs.lib.mkIf pkgs.stdenv.isLinux (
     config.lib.dag.entryAfter [ "installChromeHeadlessShell" ] ''
-      export PATH="${nodejs}/bin:/usr/bin:/bin:$PATH"
+      export PATH="${pkgs.nodejs}/bin:/usr/bin:/bin:$PATH"
       NPM_DIR="$HOME/.local/lib/node_modules"
       if [ -d "$NPM_DIR/playwright-core" ]; then
         echo "playwright-core is already installed."
