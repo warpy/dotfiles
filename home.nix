@@ -35,15 +35,15 @@ in
     '')
     (stdenv.mkDerivation {
       pname = "antigravity";
-      version = "1.0.0";
+      version = "1.1.4";
       src = fetchurl {
-        url = "https://antigravity.google/cli/downloads/antigravity-linux-x64";
-        sha256 = "sha256-S8nNdNjyOLvF5TPVTPUdrQSXFjBZ1FGEppaYadn44N8=";
+        url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.1.4-6277569641840640/linux-x64/cli_linux_x64.tar.gz";
+        sha256 = "sha256-qqtC45XLTjv+WuiJlKNAhl2Un3qefwYE/6Kj8eiq2/o=";
       };
       phases = [ "installPhase" ];
       installPhase = ''
         mkdir -p $out/bin
-        cp $src $out/bin/antigravity
+        tar -xzf $src -C $out/bin antigravity
         chmod +x $out/bin/antigravity
       '';
     })
